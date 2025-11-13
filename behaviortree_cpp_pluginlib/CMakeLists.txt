@@ -81,11 +81,11 @@ if(BUILD_TESTING)
     @ONLY
   )
 
-  set(TEST_SOURCES
+  ament_add_gtest(test_register
     test/test_register.cpp
     ${PROJECT_BINARY_DIR}/test/autoregistrar.cpp
   )
-  polymath_add_catch2_test(test_register "${TEST_SOURCES}" ${PROJECT_NAME})
+  target_link_libraries(test_register ${PROJECT_NAME})
 endif()
 
 ament_export_targets(${PROJECT_NAME}_TARGETS HAS_LIBRARY_TARGET)

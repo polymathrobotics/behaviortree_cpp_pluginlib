@@ -50,8 +50,10 @@ if(BUILD_TESTING)
     RUNTIME DESTINATION bin
   )
 
-  polymath_add_catch2_test(test_factory test/test_factory.cpp test_plugin_a)
-  target_link_libraries(test_factory behaviortree_cpp_pluginlib::behaviortree_cpp_pluginlib)
+  ament_add_gtest(test_factory test/test_factory.cpp)
+  target_link_libraries(test_factory
+    behaviortree_cpp_pluginlib::behaviortree_cpp_pluginlib
+  )
 endif()
 
 ament_package()

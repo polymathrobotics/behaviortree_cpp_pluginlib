@@ -17,15 +17,15 @@
 #include <vector>
 
 #include "behaviortree_cpp_pluginlib/factory.hpp"
-#include "polymath_test/catch2.hpp"
+#include "gtest/gtest.h"
 
-TEST_CASE("Autofactory finds plugins registered via the various macros")
+TEST(Factory, AutofactoryEndToEnd)
 {
   BT::PluginAwareFactory factory;
   const auto & builders = factory.builders();
-  REQUIRE_NOTHROW(builders.at("CustomNodeA1"));
-  REQUIRE_NOTHROW(builders.at("CustomNodeA2"));
-  REQUIRE_NOTHROW(builders.at("CustomNodeB1"));
-  REQUIRE_NOTHROW(builders.at("CustomNodeB2"));
-  REQUIRE_THROWS_AS(builders.at("NonexistentNode"), std::out_of_range);
+  ASSERT_NO_THROW(builders.at("CustomNodeA1"));
+  ASSERT_NO_THROW(builders.at("CustomNodeA2"));
+  ASSERT_NO_THROW(builders.at("CustomNodeB1"));
+  ASSERT_NO_THROW(builders.at("CustomNodeB2"));
+  ASSERT_THROW(builders.at("NonexistentNode"), std::out_of_range);
 }

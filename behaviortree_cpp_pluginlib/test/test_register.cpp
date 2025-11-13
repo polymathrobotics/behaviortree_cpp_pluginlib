@@ -15,7 +15,7 @@
 #include <string>
 
 #include "behaviortree_cpp_pluginlib/register_macro.hpp"
-#include "polymath_test/catch2.hpp"
+#include "gtest/gtest.h"
 
 namespace btplugin::testing
 {
@@ -50,19 +50,19 @@ BT_PLUGIN_REGISTER(factory)
   factory.registerNodeType<btplugin::testing::CustomNode3>("CustomNode3");
 }
 
-TEST_CASE("Plugin registration macros")
+TEST(Registration, MacrosBasicUse)
 {
   BT::BehaviorTreeFactory factory;
 
   auto plugin_fns = BT::get_plugin_register_functions();
-  REQUIRE(plugin_fns.size() == 2);
+  ASSERT_EQ(plugin_fns.size(), 2);
   for (const auto & plugin_fn : plugin_fns) {
     plugin_fn(factory);
   }
 
   auto builders = factory.builders();
-  REQUIRE_NOTHROW(builders.at("CustomNode1"));
-  REQUIRE_NOTHROW(builders.at("CustomNode2"));
-  REQUIRE_NOTHROW(builders.at("CustomNode3"));
-  REQUIRE_THROWS_AS(builders.at("NonexistentNode"), std::out_of_range);
+  ASSERT_NO_THROW(builders.at("CustomNode1"));
+  ASSERT_NO_THROW(builders.at("CustomNode2"));
+  ASSERT_NO_THROW(builders.at("CustomNode3"));
+  ASSERT_THROW(builders.at("NonexistentNode"), std::out_of_range);
 }

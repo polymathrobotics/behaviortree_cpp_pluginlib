@@ -1,0 +1,31 @@
+// Copyright (c) 2025-present Polymath Robotics, Inc. All rights reserved
+// Proprietary. Any unauthorized copying, distribution, or modification of this software is strictly prohibited.
+
+#include "behaviortree_cpp/bt_factory.h"
+#include "behaviortree_cpp_pluginlib/plugin.hpp"
+#include "pluginlib/class_list_macros.hpp"
+
+namespace BT {
+/// @brief Implements forward-declared get_plugin_register_functions
+/// Owns a global static vector of functions, and returns mutable reference to it.
+std::vector<void(*)(BT::BehaviorTreeFactory&)>& get_plugin_register_functions() {
+  static std::vector<void(*)(BT::BehaviorTreeFactory&)> registry;
+  return registry;
+}
+} // namespace BT
+
+namespace @arg_TARGET@::_BT_PLUGINS_IMPL
+{
+/// @brief Implements the single plugin class for a given library to expose to pluginlib
+class AutoPluginRegistrar : public BT::BehaviorTreePlugin {
+public:
+  /// @brief Simply iterates over the static function list, which was populated at library load
+  void registerTypes(BT::BehaviorTreeFactory& factory) override {
+    for (auto& fn : BT::get_plugin_register_functions()) {
+      fn(factory);
+    }
+  }
+};
+}  // namespace @arg_TARGET@::_BT_PLUGINS_IMPL
+
+PLUGINLIB_EXPORT_CLASS(@arg_TARGET@::_BT_PLUGINS_IMPL::AutoPluginRegistrar, BT::BehaviorTreePlugin)

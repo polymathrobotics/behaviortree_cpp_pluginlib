@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<library path="@arg_TARGET@">
+  <class name="@arg_TARGET@_BehaviorTreePluginRegistrar"
+         type="@arg_TARGET@::_BT_PLUGINS_IMPL::AutoPluginRegistrar"
+         base_class_type="BT::BehaviorTreePlugin">
+    <description>Automatically generated BehaviorTree.CPP plugin registration class for "@PROJECT_NAME@" project's target "@arg_TARGET@"</description>
+  </class>
+</library>

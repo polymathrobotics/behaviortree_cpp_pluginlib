@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>behaviortree_cpp_pluginlib</name>
+  <version>0.0.0</version>
+  <description>Tools enabling users to define BehaviorTree.CPP extensions using pluginlib.</description>
+  <maintainer email="engineering@polymathrobotics.com">Polymath Robotics Engineering</maintainer>
+  <license>Apache-2.0</license>
+  <author email="emerson@polymathrobotics.com">Emerson Knapp</author>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_auto</buildtool_depend>
+
+  <depend>behaviortree_cpp</depend>
+  <depend>pluginlib</depend>
+  <depend>rcutils</depend>
+
+  <test_depend>polymath_test</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

@@ -68,6 +68,41 @@ Simple as 1, 2, 3: depend on this package, register your library as a plugin pro
     }
     ```
 
+## Registering Subtrees
+
+You can also ship reusable subtrees as `.xml` files. They are discovered and registered by `BT::PluginAwareFactory` automatically, so any loaded tree can reference them via `<SubTree ID="..."/>` without loading files by hand.
+
+1. Write a subtree XML with a single `<BehaviorTree ID="...">` (the `ID` is the name you reference as a `<SubTree>`):
+
+    ```xml
+    <root BTCPP_format="4">
+      <BehaviorTree ID="GoAndBeep">
+        <Sequence>
+          <MoveTo/>
+          <Beep/>
+        </Sequence>
+      </BehaviorTree>
+    </root>
+    ```
+
+2. `CMakeLists.txt` - register the file(s). Use the `SUBTREES` keyword to ship them alongside a plugin library (e.g. one that provides the nodes the subtree uses):
+
+    ```cmake
+    register_behaviortree_cpp_plugin(my_plugin_library
+      SUBTREES trees/go_and_beep.xml
+    )
+    ```
+
+    Or, for a package that ships subtrees but builds no plugin library, use the standalone function:
+
+    ```cmake
+    register_behaviortree_cpp_subtrees(FILES trees/go_and_beep.xml)
+    # Pass a distinct NAME when calling more than once in a single package:
+    # register_behaviortree_cpp_subtrees(NAME navigation FILES trees/go_and_beep.xml)
+    ```
+
+Note: a subtree may only reference built-in nodes or nodes provided by a loaded plugin. Referencing a node that is registered manually after the factory is constructed is not supported — such a subtree is logged and skipped at load time.
+
 ## Loading Plugins
 
 To load all registered plugins, link against the exported library target and use the `BT::PluginAwareFactory`

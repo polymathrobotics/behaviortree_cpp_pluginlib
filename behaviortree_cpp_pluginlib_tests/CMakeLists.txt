@@ -35,7 +35,7 @@ if(BUILD_TESTING)
   # Create test libraries
   add_library(test_plugin_a SHARED test/plugin_a.cpp)
   target_link_libraries(test_plugin_a PUBLIC behaviortree_cpp_pluginlib::behaviortree_cpp_pluginlib)
-  # Ship a subtree that references CustomNodeA1 (from this same plugin) via the SUBTREES keyword.
+  # Subtree referencing CustomNodeA1, shipped via the SUBTREES keyword.
   register_behaviortree_cpp_plugin(test_plugin_a
     SUBTREES ${CMAKE_CURRENT_SOURCE_DIR}/test/subtrees/subtree_uses_a.xml)
 
@@ -43,8 +43,7 @@ if(BUILD_TESTING)
   target_link_libraries(test_plugin_b PRIVATE behaviortree_cpp_pluginlib::behaviortree_cpp_pluginlib)
   register_behaviortree_cpp_plugin(test_plugin_b)
 
-  # Also exercise the standalone (node-less) subtree registration path, and prove two subtree
-  # markers coexist within one package.
+  # Exercise the standalone subtree registration path (and a second marker in one package).
   register_behaviortree_cpp_subtrees(NAME standalone
     FILES ${CMAKE_CURRENT_SOURCE_DIR}/test/subtrees/standalone_subtree.xml)
 

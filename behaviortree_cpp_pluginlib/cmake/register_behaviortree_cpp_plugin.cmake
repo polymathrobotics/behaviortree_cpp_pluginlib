@@ -64,9 +64,7 @@ function(register_behaviortree_cpp_plugin arg_TARGET)
   list(APPEND __PLUGINLIB_PLUGIN_CATEGORIES "behaviortree_cpp")
   set(__PLUGINLIB_PLUGIN_CATEGORIES "${__PLUGINLIB_PLUGIN_CATEGORIES}" PARENT_SCOPE)
 
-  # Optionally ship subtree XML alongside this plugin. The marker suffix is the target name, which
-  # is unique within the package, so this composes with a separate register_behaviortree_cpp_subtrees()
-  # call without colliding on the ament resource marker path (see helper below).
+  # Ship subtree XML alongside this plugin, keyed by the (package-unique) target name.
   if(ARG_SUBTREES)
     _register_behaviortree_cpp_subtrees("${arg_TARGET}" ${ARG_SUBTREES})
   endif()
@@ -103,13 +101,11 @@ function(register_behaviortree_cpp_subtrees)
 endfunction()
 
 #
-# Internal helper: install subtree XML files and register them in the ament resource index under
-# the "behaviortree_cpp_subtrees" category, so BT::PluginAwareFactory can discover them at runtime.
+# Internal helper: install subtree XML files and register them in the "behaviortree_cpp_subtrees"
+# ament resource index category for BT::PluginAwareFactory to discover at runtime.
 #
-# The resource marker is named "<PROJECT_NAME>__<marker_suffix>" to keep it unique per call:
-# ament_index_register_resource() uses file(GENERATE), which hard-errors if the same marker path is
-# written twice with different content. The runtime does not rely on the marker name; it reads the
-# install prefix from the resource and the package-relative path from the marker content.
+# The marker is named "<PROJECT_NAME>__<marker_suffix>" so repeated calls in one package don't
+# collide (ament_index_register_resource uses file(GENERATE), which errors on a reused path).
 #
 function(_register_behaviortree_cpp_subtrees marker_suffix)
   set(marker_content "")
@@ -120,8 +116,7 @@ function(_register_behaviortree_cpp_subtrees marker_suffix)
     endif()
     get_filename_component(subtree_name "${subtree_abs}" NAME)
     install(FILES "${subtree_abs}" DESTINATION share/${PROJECT_NAME}/behaviortree_subtrees)
-    # Path is share-relative and includes the package folder, so the runtime resolves it as
-    # <install_prefix>/share/<this line> under both merged and isolated colcon installs.
+    # Share-relative path including the package folder, resolved at runtime as <prefix>/share/<line>.
     string(APPEND marker_content "${PROJECT_NAME}/behaviortree_subtrees/${subtree_name}\n")
   endforeach()
 

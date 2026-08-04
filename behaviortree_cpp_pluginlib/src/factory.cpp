@@ -45,12 +45,11 @@ PluginAwareFactory::PluginAwareFactory(const std::vector<std::string> & plugin_x
     plugin->registerTypes(*this);
   }
 
-  // Phase 2: now that every node type from every discovered plugin has been registered above,
-  // load any subtree XML files shipped by plugin packages. Ordering matters: BT.CPP runs its
-  // XML verification at registration time and throws if a subtree references a concrete node
-  // type that is not yet registered, so this must happen strictly after the loop above.
-  // Subtrees are discovered via the "behaviortree_cpp_subtrees" ament resource index category,
-  // populated by the register_behaviortree_cpp_subtrees() CMake helper.
+  // Load shipped subtree XML only after every node type is registered above: BT.CPP verifies
+  // XML at registration time and rejects subtrees referencing an unregistered node.
+  // Content is a newline-separated list of share-relative paths registered by the
+  // register_behaviortree_cpp_subtrees() CMake helper; the prefix comes from the resource, so it
+  // resolves under both merged and isolated installs.
   const std::string subtree_resource = "behaviortree_cpp_subtrees";
   for (const auto & [marker_name, install_prefix] :
     ament_index_cpp::get_resources(subtree_resource))
@@ -59,15 +58,11 @@ PluginAwareFactory::PluginAwareFactory(const std::vector<std::string> & plugin_x
     if (!ament_index_cpp::get_resource(subtree_resource, marker_name, content)) {
       continue;
     }
-    // Content is a newline-separated list of share-relative paths, each already including the
-    // providing package's folder (e.g. "my_pkg/behaviortree_subtrees/foo.xml"). The install
-    // prefix comes from the resource itself, so this resolves correctly under both merged and
-    // isolated colcon installs.
     std::istringstream stream(content);
     std::string relative_path;
     while (std::getline(stream, relative_path)) {
       if (relative_path.empty()) {
-        continue;  // A trailing newline yields an empty final token.
+        continue;
       }
       const std::filesystem::path subtree_path =
         std::filesystem::path(install_prefix) / "share" / relative_path;
@@ -78,8 +73,8 @@ PluginAwareFactory::PluginAwareFactory(const std::vector<std::string> & plugin_x
           "Registered subtree(s) from %s",
           subtree_path.c_str());
       } catch (const std::exception & e) {
-        // Keep the factory usable even if one package ships a malformed subtree or one that
-        // references a node no loaded plugin provides. Log loudly and skip it.
+        // Skip a malformed subtree, or one referencing a node no loaded plugin provides,
+        // rather than failing construction.
         RCUTILS_LOG_ERROR_NAMED(
           "behaviortree_cpp_pluginlib",
           "Failed to register subtree from %s: %s",
@@ -92,9 +87,6 @@ PluginAwareFactory::PluginAwareFactory(const std::vector<std::string> & plugin_x
 
 PluginAwareFactory::~PluginAwareFactory()
 {
-  // Clear registered tree definitions first. These hold only parsed XML owned by the
-  // behaviortree_cpp library (not by any dlopen'd plugin), so this is defensive/symmetric
-  // rather than strictly required for lifetime correctness.
   clearRegisteredBehaviorTrees();
 
   // First grab all the IDs, since unregistering them modifies the map and invalidates iterators

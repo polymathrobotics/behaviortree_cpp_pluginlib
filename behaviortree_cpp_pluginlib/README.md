@@ -77,10 +77,7 @@ You can also ship reusable subtrees as `.xml` files. They are discovered and reg
     ```xml
     <root BTCPP_format="4">
       <BehaviorTree ID="GoAndBeep">
-        <Sequence>
-          <MoveTo/>
-          <Beep/>
-        </Sequence>
+        ...
       </BehaviorTree>
     </root>
     ```
@@ -123,6 +120,22 @@ To load all registered plugins, link against the exported library target and use
     ...
       BT::PluginAwareFactory factory;
     ...
+    ```
+
+3. All registered nodes _and_ subtrees are now available. Reference a shipped subtree by its `ID` from any tree you load - no need to load its file yourself:
+
+    ```c++
+    factory.registerBehaviorTreeFromText(R"(
+      <root BTCPP_format="4">
+        <BehaviorTree ID="Main">
+          <Sequence>
+            <SubTree ID="GoAndBeep"/>
+          </Sequence>
+        </BehaviorTree>
+      </root>)");
+
+    auto tree = factory.createTree("Main");
+    tree.tickWhileRunning();
     ```
 
 # Implementation Details

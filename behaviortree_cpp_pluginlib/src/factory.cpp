@@ -14,10 +14,14 @@
 
 #include "behaviortree_cpp_pluginlib/factory.hpp"
 
+#include <filesystem>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
 
+#include "ament_index_cpp/get_resource.hpp"
+#include "ament_index_cpp/get_resources.hpp"
 #include "behaviortree_cpp/bt_factory.h"
 #include "behaviortree_cpp_pluginlib/plugin.hpp"
 #include "rcutils/logging_macros.h"
@@ -40,10 +44,42 @@ PluginAwareFactory::PluginAwareFactory(const std::vector<std::string> & plugin_x
       class_library_path.c_str());
     plugin->registerTypes(*this);
   }
+
+  // Load shipped subtree XML only after every node type is registered above: BT.CPP verifies
+  // XML at registration time and rejects subtrees referencing an unregistered node.
+  // Content is a newline-separated list of share-relative paths registered by the
+  // register_behaviortree_cpp_subtrees() CMake helper; the prefix comes from the resource, so it
+  // resolves under both merged and isolated installs.
+  const std::string subtree_resource = "behaviortree_cpp_subtrees";
+  for (const auto & [marker_name, install_prefix] : ament_index_cpp::get_resources(subtree_resource)) {
+    std::string content;
+    if (!ament_index_cpp::get_resource(subtree_resource, marker_name, content)) {
+      continue;
+    }
+    std::istringstream stream(content);
+    std::string relative_path;
+    while (std::getline(stream, relative_path)) {
+      if (relative_path.empty()) {
+        continue;
+      }
+      const std::filesystem::path subtree_path = std::filesystem::path(install_prefix) / "share" / relative_path;
+      try {
+        registerBehaviorTreeFromFile(subtree_path);
+        RCUTILS_LOG_INFO_NAMED("behaviortree_cpp_pluginlib", "Registered subtree(s) from %s", subtree_path.c_str());
+      } catch (const std::exception & e) {
+        // Skip a malformed subtree, or one referencing a node no loaded plugin provides,
+        // rather than failing construction.
+        RCUTILS_LOG_ERROR_NAMED(
+          "behaviortree_cpp_pluginlib", "Failed to register subtree from %s: %s", subtree_path.c_str(), e.what());
+      }
+    }
+  }
 }
 
 PluginAwareFactory::~PluginAwareFactory()
 {
+  clearRegisteredBehaviorTrees();
+
   // First grab all the IDs, since unregistering them modifies the map and invalidates iterators
   std::vector<std::string> ids_to_unregister;
   for (const auto & [id, _] : builders()) {

@@ -1,0 +1,7 @@
+<root BTCPP_format="4">
+  <BehaviorTree ID="StandaloneSubtree">
+    <Sequence>
+      <CustomNodeB1/>
+    </Sequence>
+  </BehaviorTree>
+</root>

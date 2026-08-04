@@ -43,6 +43,7 @@ target_link_libraries(${PROJECT_NAME}
     pluginlib::pluginlib
   PRIVATE
     rcutils::rcutils
+    ament_index_cpp::ament_index_cpp
 )
 
 # Install and export resources

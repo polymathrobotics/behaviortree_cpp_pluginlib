@@ -35,11 +35,17 @@ if(BUILD_TESTING)
   # Create test libraries
   add_library(test_plugin_a SHARED test/plugin_a.cpp)
   target_link_libraries(test_plugin_a PUBLIC behaviortree_cpp_pluginlib::behaviortree_cpp_pluginlib)
-  register_behaviortree_cpp_plugin(test_plugin_a)
+  # Subtree referencing CustomNodeA1, shipped via the SUBTREES keyword.
+  register_behaviortree_cpp_plugin(test_plugin_a
+    SUBTREES ${CMAKE_CURRENT_SOURCE_DIR}/test/subtrees/subtree_uses_a.xml)
 
   add_library(test_plugin_b SHARED test/plugin_b.cpp)
   target_link_libraries(test_plugin_b PRIVATE behaviortree_cpp_pluginlib::behaviortree_cpp_pluginlib)
   register_behaviortree_cpp_plugin(test_plugin_b)
+
+  # Exercise the standalone subtree registration path (and a second marker in one package).
+  register_behaviortree_cpp_subtrees(NAME standalone
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/test/subtrees/standalone_subtree.xml)
 
   # In the special case of a test-only package that isn't normally installed on target systems,
   # we may install the test targets to run install-space testing on them (pluginlib loading)

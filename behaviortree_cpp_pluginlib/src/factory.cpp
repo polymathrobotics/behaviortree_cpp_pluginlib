@@ -51,9 +51,7 @@ PluginAwareFactory::PluginAwareFactory(const std::vector<std::string> & plugin_x
   // register_behaviortree_cpp_subtrees() CMake helper; the prefix comes from the resource, so it
   // resolves under both merged and isolated installs.
   const std::string subtree_resource = "behaviortree_cpp_subtrees";
-  for (const auto & [marker_name, install_prefix] :
-    ament_index_cpp::get_resources(subtree_resource))
-  {
+  for (const auto & [marker_name, install_prefix] : ament_index_cpp::get_resources(subtree_resource)) {
     std::string content;
     if (!ament_index_cpp::get_resource(subtree_resource, marker_name, content)) {
       continue;
@@ -64,22 +62,15 @@ PluginAwareFactory::PluginAwareFactory(const std::vector<std::string> & plugin_x
       if (relative_path.empty()) {
         continue;
       }
-      const std::filesystem::path subtree_path =
-        std::filesystem::path(install_prefix) / "share" / relative_path;
+      const std::filesystem::path subtree_path = std::filesystem::path(install_prefix) / "share" / relative_path;
       try {
         registerBehaviorTreeFromFile(subtree_path);
-        RCUTILS_LOG_INFO_NAMED(
-          "behaviortree_cpp_pluginlib",
-          "Registered subtree(s) from %s",
-          subtree_path.c_str());
+        RCUTILS_LOG_INFO_NAMED("behaviortree_cpp_pluginlib", "Registered subtree(s) from %s", subtree_path.c_str());
       } catch (const std::exception & e) {
         // Skip a malformed subtree, or one referencing a node no loaded plugin provides,
         // rather than failing construction.
         RCUTILS_LOG_ERROR_NAMED(
-          "behaviortree_cpp_pluginlib",
-          "Failed to register subtree from %s: %s",
-          subtree_path.c_str(),
-          e.what());
+          "behaviortree_cpp_pluginlib", "Failed to register subtree from %s: %s", subtree_path.c_str(), e.what());
       }
     }
   }

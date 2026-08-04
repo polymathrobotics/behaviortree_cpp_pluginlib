@@ -17,13 +17,19 @@
 #
 # Example usage:
 # register_behaviortree_cpp_plugin(my_library)
+# register_behaviortree_cpp_plugin(my_library SUBTREES trees/patrol.xml trees/dock.xml)
 #
 # :param TARGET: name of a valid CMake shared library target to export plugins from
 # :type TARGET: string
+# :param SUBTREES: optional list of subtree XML files to ship with this plugin. Each file is
+#   installed and registered so that BT::PluginAwareFactory loads it automatically, making its
+#   <BehaviorTree ID="..."> definitions available to any loaded tree via <SubTree ID="..."/>.
+# :type SUBTREES: list of files
 #
 # @public
 #
 function(register_behaviortree_cpp_plugin arg_TARGET)
+  cmake_parse_arguments(ARG "" "" "SUBTREES" ${ARGN})
   if(NOT arg_TARGET)
     message(FATAL_ERROR "register_behaviortree_cpp_plugin() called without TARGET argument")
   endif()
@@ -57,4 +63,70 @@ function(register_behaviortree_cpp_plugin arg_TARGET)
   )
   list(APPEND __PLUGINLIB_PLUGIN_CATEGORIES "behaviortree_cpp")
   set(__PLUGINLIB_PLUGIN_CATEGORIES "${__PLUGINLIB_PLUGIN_CATEGORIES}" PARENT_SCOPE)
+
+  # Optionally ship subtree XML alongside this plugin. The marker suffix is the target name, which
+  # is unique within the package, so this composes with a separate register_behaviortree_cpp_subtrees()
+  # call without colliding on the ament resource marker path (see helper below).
+  if(ARG_SUBTREES)
+    _register_behaviortree_cpp_subtrees("${arg_TARGET}" ${ARG_SUBTREES})
+  endif()
+endfunction()
+
+#
+# Register BehaviorTree.CPP subtree XML files without a C++ plugin target.
+#
+# Use this for packages that ship reusable subtrees but build no node plugin library. The subtrees
+# are installed and registered so that BT::PluginAwareFactory loads them automatically.
+#
+# Example usage:
+# register_behaviortree_cpp_subtrees(FILES trees/patrol.xml trees/dock.xml)
+# register_behaviortree_cpp_subtrees(NAME navigation FILES trees/patrol.xml)
+#
+# :param NAME: optional group suffix, used to build a unique resource marker. Defaults to "subtrees".
+#   Pass distinct NAMEs when calling this more than once in a single package.
+# :type NAME: string
+# :param FILES: list of subtree XML files to install and register.
+# :type FILES: list of files
+#
+# @public
+#
+function(register_behaviortree_cpp_subtrees)
+  cmake_parse_arguments(ARG "" "NAME" "FILES" ${ARGN})
+  if(NOT ARG_FILES)
+    message(FATAL_ERROR "register_behaviortree_cpp_subtrees() called without FILES argument")
+  endif()
+  set(marker_suffix "subtrees")
+  if(ARG_NAME)
+    set(marker_suffix "${ARG_NAME}")
+  endif()
+  _register_behaviortree_cpp_subtrees("${marker_suffix}" ${ARG_FILES})
+endfunction()
+
+#
+# Internal helper: install subtree XML files and register them in the ament resource index under
+# the "behaviortree_cpp_subtrees" category, so BT::PluginAwareFactory can discover them at runtime.
+#
+# The resource marker is named "<PROJECT_NAME>__<marker_suffix>" to keep it unique per call:
+# ament_index_register_resource() uses file(GENERATE), which hard-errors if the same marker path is
+# written twice with different content. The runtime does not rely on the marker name; it reads the
+# install prefix from the resource and the package-relative path from the marker content.
+#
+function(_register_behaviortree_cpp_subtrees marker_suffix)
+  set(marker_content "")
+  foreach(subtree_xml ${ARGN})
+    get_filename_component(subtree_abs "${subtree_xml}" ABSOLUTE)
+    if(NOT EXISTS "${subtree_abs}")
+      message(FATAL_ERROR "register subtrees: file does not exist: ${subtree_abs}")
+    endif()
+    get_filename_component(subtree_name "${subtree_abs}" NAME)
+    install(FILES "${subtree_abs}" DESTINATION share/${PROJECT_NAME}/behaviortree_subtrees)
+    # Path is share-relative and includes the package folder, so the runtime resolves it as
+    # <install_prefix>/share/<this line> under both merged and isolated colcon installs.
+    string(APPEND marker_content "${PROJECT_NAME}/behaviortree_subtrees/${subtree_name}\n")
+  endforeach()
+
+  ament_index_register_resource("behaviortree_cpp_subtrees"
+    CONTENT "${marker_content}"
+    PACKAGE_NAME "${PROJECT_NAME}__${marker_suffix}"
+  )
 endfunction()

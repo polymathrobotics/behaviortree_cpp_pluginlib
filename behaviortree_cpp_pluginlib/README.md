@@ -134,6 +134,9 @@ To load all registered plugins, link against the exported library target and use
         </BehaviorTree>
       </root>)");
 
+    // Or load the tree definition from a file instead:
+    // factory.registerBehaviorTreeFromFile("path/to/main.xml");
+
     auto tree = factory.createTree("Main");
     tree.tickWhileRunning();
     ```

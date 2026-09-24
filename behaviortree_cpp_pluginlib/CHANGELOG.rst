@@ -2,8 +2,8 @@
 Changelog for package behaviortree_cpp_pluginlib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.0 (2026-09-24)
+------------------
 * Add subtree registration system (`#4 <https://github.com/polymathrobotics/behaviortree_cpp_pluginlib/issues/4>`_)
 * Contributors: Zeerek Ahmad
 
